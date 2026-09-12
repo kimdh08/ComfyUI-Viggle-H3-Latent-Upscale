@@ -179,7 +179,14 @@ ComfyUI에서 `workflows/` 아래 JSON을 drag & drop 하거나 `Load`로 불러
 
 ## GPU / PyTorch 권장 환경
 
-최종 chunk + latent upscale + refine 구성은 다음 환경에서 성공 확인했습니다.
+이 workflow는 MiniMax H3 본체, learned latent upscaler, 그리고 high-resolution H3 refine을 함께 사용하기 때문에 GPU 요구사항이 높은 편입니다.
+
+- **최소 권장 GPU:** NVIDIA GeForce RTX 5090 이상급
+- **권장 GPU:** NVIDIA RTX 6000 PRO (Blackwell) 또는 그 이상의 VRAM/연산 성능을 가진 GPU
+- **RTX 5090 32 GB:** 동작 확인됨. 다만 `107 frames / 1.2 MP / 3-step refine` 같은 설정은 VRAM 여유가 크지 않을 수 있습니다.
+- **RTX 6000 PRO (Blackwell):** 더 큰 VRAM 덕분에 긴 chunk, 높은 refine 해상도, 3-step refine 운용에 더 적합하므로 권장합니다.
+
+최종 chunk + latent upscale + refine 구성은 다음 환경에서 실제 성공 확인했습니다.
 
 ```text
 GPU: NVIDIA GeForce RTX 5090 32 GB
@@ -189,7 +196,7 @@ PyTorch: 2.11.0+cu130
 CUDA runtime: 13.0
 ```
 
-RTX 50-series / Blackwell에서는 PyTorch CUDA 13.0 이상을 권장합니다.
+특히 RTX 50-series 및 RTX PRO Blackwell GPU에서는 PyTorch CUDA 13.0 이상을 권장합니다.
 
 다음 명령으로 확인할 수 있습니다.
 
