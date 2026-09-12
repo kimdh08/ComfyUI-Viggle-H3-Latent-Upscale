@@ -1,0 +1,65 @@
+name: Finalize pretty workflow JSON
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.workflow_parts/**'
+      - '.github/workflows/format-workflows.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild and pretty-format workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat .workflow_parts/single.part*.b64 | tr -d '\n' | base64 --decode > /tmp/single.json
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          single_src = Path('/tmp/single.json')
+          single_dst = Path('workflows/viggle-animate-h3-single-latent-upscale-switch.json')
+          chunk_dst = Path('workflows/viggle-animate-h3-chunked-latent-upscale-refine.json')
+
+          single = json.loads(single_src.read_text(encoding='utf-8'))
+          chunk = json.loads(chunk_dst.read_text(encoding='utf-8'))
+
+          single_dst.write_text(
+              json.dumps(single, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8'
+          )
+          chunk_dst.write_text(
+              json.dumps(chunk, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8'
+          )
+          PY
+
+          rm -rf .workflow_parts
+          rm -f .github/workflows/format-workflows.yml
+
+      - name: Commit final workflow files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Pretty-format final workflow JSON files"
+          git push
